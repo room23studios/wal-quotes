@@ -86,22 +86,27 @@ def get_submissions():
     return jsonify(output)
 
 
+@app.route('/api/delete/<int:quote_id>', methods=['POST'])
+@auth.login_required
+def remove_quote(quote_id):
+    quote_db = Quote.query.filter_by(id=quote_id).first()
+    if quote_db is not None:
+        Quote.query.filter_by(id=quote_id).delete()
+        db.session.commit()
+        return '', 200
+    else:
+        abort(404)
+
+
 @app.route('/api/submissions/<int:quote_id>', methods=['POST'])
 @auth.login_required
 def set_submissions(quote_id):
     quote_db = Quote.query.filter_by(id=quote_id).first()
     if quote_db is not None:
-        if request.form.get('action', 'accept') == 'accept':
-            quote_db.accepted = True
-            db.session.add(quote_db)
-            db.session.commit()
-            return '', 200
-        else:
-            Quote.query.filter_by(id=quote_id).delete()
-            db.session.commit()
-            return '', 200
-    else:
-        abort(404)
+        quote_db.accepted = True
+        db.session.add(quote_db)
+        db.session.commit()
+        return '', 200
 
 
 @app.route('/api/new_admin', methods=['POST'])
