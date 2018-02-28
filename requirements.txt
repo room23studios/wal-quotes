@@ -1,0 +1,5 @@
+flask
+flask_sqlalchemy
+passlib
+flask_httpauth
+sqlalchemy
