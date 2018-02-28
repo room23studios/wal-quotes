@@ -44,11 +44,14 @@ def get_quote(quote_id):
             quote = {'quote': quote_db.quote,
                      'date': quote_db.date,
                      'annotation': quote_db.annotation}
-            return jsonify(quote)
+            return jsonify({'status': 'success',
+                            'quote': quote})
         else:
-            abort(403)
+            return jsonify({'status': 'error',
+                            'description': 'Quote does not exists'})
     else:
-        abort(404)
+        return jsonify({'status': 'error',
+                        'description': 'Quote does not exists'})
 
 
 @app.route('/api/submit', methods=['POST'])
@@ -58,10 +61,12 @@ def submit():
                       annotation=request.form.get('Annotation', ''))
         db.session.add(quote)
         db.session.commit()
-        return str(quote.id)
+        return jsonify({'status': 'success',
+                        'id': quote.id})
 
     else:
-        abort(400)
+        return jsonify({'status': 'error',
+                        'description': 'Quote is not unique'})
 
 
 @auth.verify_password
@@ -83,7 +88,8 @@ def get_submissions():
                        'quote': quote.quote,
                        'date': quote.date,
                        'annotation': quote.annotation})
-    return jsonify(output)
+    return jsonify({'status': 'success',
+                    'submissions': output})
 
 
 @app.route('/api/delete/<int:quote_id>', methods=['POST'])
@@ -93,9 +99,10 @@ def remove_quote(quote_id):
     if quote_db is not None:
         Quote.query.filter_by(id=quote_id).delete()
         db.session.commit()
-        return '', 200
+        return jsonify({'status': 'success'})
     else:
-        abort(404)
+        return jsonify({'status': 'error',
+                        'description': 'Quote does not exists'})
 
 
 @app.route('/api/submissions/<int:quote_id>', methods=['POST'])
@@ -106,7 +113,10 @@ def set_submissions(quote_id):
         quote_db.accepted = True
         db.session.add(quote_db)
         db.session.commit()
-        return '', 200
+        return jsonify({'status': 'success'})
+    else:
+        return jsonify({'status': 'error',
+                        'description': 'Quote does not exists'})
 
 
 @app.route('/api/new_admin', methods=['POST'])
@@ -117,9 +127,10 @@ def add_admin():
         admin.hash_password(request.form['Username'])
         db.session.add(admin)
         db.session.commit()
-        return '', 200
+        return jsonify({'status': 'success'})
     else:
-        abort(400)
+        return jsonify({'status': 'error',
+                        'description': 'Username is not unique'})
 
 
 @app.route('/api/change_password', methods=['POST'])
@@ -128,37 +139,59 @@ def change_password():
     g.user.hash_password(request.form['Password'])
     db.session.add(g.user)
     db.session.commit()
-    return '', 200
+    return jsonify({'status': 'success'})
 
 
 @app.route('/api/random')
 def get_random_quote():
-    quote_db = Quote.query.filter_by(accepted=True).order_by(func.random()).first()
-    quote = {'id': quote_db.id,
-             'quote': quote_db.quote,
-             'date': quote_db.date,
-             'annotation': quote_db.annotation}
-    return jsonify(quote)
+    if Quote.query.first() is not None:
+        quote_db = Quote.query.filter_by(accepted=True).order_by(func.random()).first()
+        quote = {'id': quote_db.id,
+                 'quote': quote_db.quote,
+                 'date': quote_db.date,
+                 'annotation': quote_db.annotation}
+        return jsonify({'status': 'success',
+                        'quote': quote})
+    else:
+        return jsonify({'status': 'error',
+                        'description': 'No accepted quotes in database'})
 
 
 @app.route('/api/daily')
 def get_daily():
-    quote_id = Daily.query.order_by(desc(Daily.id)).first().quote_id
-    quote_db = Quote.query.filter_by(id=quote_id).first()
-    quote = {'id': quote_db.id,
-             'quote': quote_db.quote,
-             'date': quote_db.date,
-             'annotation': quote_db.annotation}
-    return jsonify(quote)
+    if Daily.query.first() is not None:
+        quote_id = Daily.query.order_by(desc(Daily.id)).first().quote_id
+        quote_db = Quote.query.filter_by(id=quote_id).first()
+        quote = {'id': quote_db.id,
+                 'quote': quote_db.quote,
+                 'date': quote_db.date,
+                 'annotation': quote_db.annotation}
+        return jsonify({'status': 'success',
+                        'quote': quote})
+    else:
+        return jsonify({'status': 'error',
+                        'description': 'No daily quote'})
 
 
-@app.route('/api/new_daily')
+@app.route('/api/new_daily', methods=['POST'])
 @auth.login_required
 def new_daily():
-    daily_id = Quote.query.filter_by(accepted=True).order_by(func.random()).first().id
-    while daily_id == Daily.query.order_by(desc(Daily.id)).first().quote_id:
+    if not change_daily():
+        return jsonify({'status': 'error',
+                        'description': 'No accepted quotes in database'})
+    return jsonify({'status': 'success',
+                    'id': Daily.query.order_by(desc(Daily.id)).first().quote_id})
+
+
+def change_daily():
+    if Quote.query.filter_by(accepted=True).first is not None:
         daily_id = Quote.query.filter_by(accepted=True).order_by(func.random()).first().id
-    daily = Daily(quote_id=daily_id)
-    db.session.add(daily)
-    db.session.commit()
-    return '', 200
+        if Daily.query.order_by(desc(Daily.id)).first() is not None:
+            while daily_id == Daily.query.order_by(desc(Daily.id)).first().quote_id:
+                daily_id = Quote.query.filter_by(accepted=True).order_by(func.random()).first().id
+        daily = Daily(quote_id=daily_id)
+        db.session.add(daily)
+        db.session.commit()
+        return True
+    else:
+        return False
