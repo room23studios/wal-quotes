@@ -1,6 +1,6 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from flask import request, abort, g
+from flask import request, abort, g, Response
 from passlib.apps import custom_app_context as pwd_context
 from flask_httpauth import HTTPBasicAuth
 from sqlalchemy.sql.expression import func, desc
@@ -47,11 +47,11 @@ def get_quote(quote_id):
         quote = {'quote': quote_db.quote,
                  'date': quote_db.date,
                  'annotation': quote_db.annotation}
-        return json.dumps({'status': 'success',
-                           'quote': quote}, ensure_ascii=False).encode('utf8')
+        return make__json_response({'status': 'success',
+                                    'quote': quote})
     else:
-        return json.dumps({'status': 'error',
-                           'description': 'Quote does not exist'}, ensure_ascii=False).encode('utf8')
+        return make__json_response({'status': 'error',
+                                    'description': 'Quote does not exist'})
 
 
 @app.route('/api/quotes')
@@ -62,8 +62,7 @@ def get_quotes():
         output.append({'quote': quote.quote,
                        'date': quote.date,
                        'annotation': quote.annotation})
-    return json.dumps({'status': 'success',
-                       'quotes': output}, ensure_ascii=False).encode('utf8')
+    return make__json_response({'status': 'success', 'quotes': output})
 
 
 @app.route('/api/submit', methods=['POST'])
@@ -74,12 +73,12 @@ def submit():
                       annotation=request.form.get('Annotation', ''))
         db.session.add(quote)
         db.session.commit()
-        return json.dumps({'status': 'success',
-                           'id': quote.id}, ensure_ascii=False).encode('utf8')
+        return make__json_response({'status': 'success',
+                                    'id': quote.id})
 
     else:
-        return json.dumps({'status': 'error',
-                           'description': 'Quote is not unique'}, ensure_ascii=False).encode('utf8')
+        return make__json_response({'status': 'error',
+                                    'description': 'Quote is not unique'})
 
 
 @auth.verify_password
@@ -101,8 +100,8 @@ def get_submissions():
                        'quote': quote.quote,
                        'date': quote.date,
                        'annotation': quote.annotation})
-    return json.dumps({'status': 'success',
-                       'submissions': output}, ensure_ascii=False).encode('utf8')
+    return make__json_response({'status': 'success',
+                                'submissions': output})
 
 
 @app.route('/api/delete/<int:quote_id>', methods=['POST'])
@@ -112,10 +111,10 @@ def remove_quote(quote_id):
     if quote_db is not None:
         Quote.query.filter_by(id=quote_id).delete()
         db.session.commit()
-        return json.dumps({'status': 'success'}, ensure_ascii=False).encode('utf8')
+        return make__json_response({'status': 'success'})
     else:
-        return json.dumps({'status': 'error',
-                           'description': 'Quote does not exist'}, ensure_ascii=False).encode('utf8')
+        return make__json_response({'status': 'error',
+                                    'description': 'Quote does not exist'})
 
 
 @app.route('/api/submissions/<int:quote_id>', methods=['POST'])
@@ -126,10 +125,10 @@ def set_submissions(quote_id):
         quote_db.accepted = True
         db.session.add(quote_db)
         db.session.commit()
-        return json.dumps({'status': 'success'}, ensure_ascii=False).encode('utf8')
+        return make__json_response({'status': 'success'})
     else:
-        return json.dumps({'status': 'error',
-                           'description': 'Quote does not exist'}, ensure_ascii=False).encode('utf8')
+        return make__json_response({'status': 'error',
+                                    'description': 'Quote does not exist'})
 
 
 @app.route('/api/new_admin', methods=['POST'])
@@ -140,10 +139,10 @@ def add_admin():
         admin.hash_password(request.form['Username'])
         db.session.add(admin)
         db.session.commit()
-        return json.dumps({'status': 'success'}, ensure_ascii=False).encode('utf8')
+        return make__json_response({'status': 'success'})
     else:
-        return json.dumps({'status': 'error',
-                           'description': 'Username is not unique'}, ensure_ascii=False).encode('utf8')
+        return make__json_response({'status': 'error',
+                                    'description': 'Username is not unique'})
 
 
 @app.route('/api/change_password', methods=['POST'])
@@ -152,7 +151,7 @@ def change_password():
     g.user.hash_password(request.form['Password'])
     db.session.add(g.user)
     db.session.commit()
-    return json.dumps({'status': 'success'}, ensure_ascii=False).encode('utf8')
+    return make__json_response({'status': 'success'})
 
 
 @app.route('/api/random')
@@ -163,11 +162,11 @@ def get_random_quote():
                  'quote': quote_db.quote,
                  'date': quote_db.date,
                  'annotation': quote_db.annotation}
-        return json.dumps({'status': 'success',
-                           'quote': quote}, ensure_ascii=False).encode('utf8')
+        return make__json_response({'status': 'success',
+                                    'quote': quote})
     else:
-        return json.dumps({'status': 'error',
-                           'description': 'No accepted quotes in database'}, ensure_ascii=False).encode('utf8')
+        return make__json_response({'status': 'error',
+                                    'description': 'No accepted quotes in database'})
 
 
 @app.route('/api/daily')
@@ -179,21 +178,22 @@ def get_daily():
                  'quote': quote_db.quote,
                  'date': quote_db.date,
                  'annotation': quote_db.annotation}
-        return json.dumps({'status': 'success',
-                           'quote': quote}, ensure_ascii=False).encode('utf8')
+        return make__json_response({'status': 'success',
+                                    'quote': quote})
     else:
-        return json.dumps({'status': 'error',
-                           'description': 'No daily quote'}, ensure_ascii=False).encode('utf8')
+        return make__json_response({'status': 'error',
+                                    'description': 'No daily quote'})
 
 
 @app.route('/api/new_daily', methods=['POST'])
 @auth.login_required
 def new_daily():
     if not change_daily():
-        return json.dumps({'status': 'error',
-                           'description': 'No accepted quotes in database'}, ensure_ascii=False).encode('utf8')
-    return json.dumps({'status': 'success',
-                       'id': Daily.query.order_by(desc(Daily.id)).first().quote_id}, ensure_ascii=False).encode('utf8')
+        return make__json_response({'status': 'error',
+                                    'description': 'No accepted quotes in database'})
+    else:
+        return make__json_response({'status': 'success',
+                                    'id': Daily.query.order_by(desc(Daily.id)).first().quote_id})
 
 
 def change_daily():
@@ -208,3 +208,10 @@ def change_daily():
         return True
     else:
         return False
+
+
+def make__json_response(json_object):
+    resp = Response(json.dumps(json_object, ensure_ascii=False).encode('utf8'))
+    resp.headers['Content-Type'] = 'application/json'
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp
