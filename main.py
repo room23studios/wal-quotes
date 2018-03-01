@@ -4,12 +4,15 @@ from flask import request, abort, g
 from passlib.apps import custom_app_context as pwd_context
 from flask_httpauth import HTTPBasicAuth
 from sqlalchemy.sql.expression import func, desc
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 import json
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 db = SQLAlchemy(app)
 auth = HTTPBasicAuth()
+limiter = Limiter(app, key_func=get_remote_address)
 
 
 class Quote(db.Model):
@@ -64,6 +67,7 @@ def get_quotes():
 
 
 @app.route('/api/submit', methods=['POST'])
+@limiter.limit("20 per hour")
 def submit():
     if Quote.query.filter_by(quote=request.form['Quote']).first() is None:
         quote = Quote(quote=request.form['Quote'], date=request.form.get('Date', ''),
