@@ -46,12 +46,44 @@ def get_quote(quote_id):
     if quote_db is not None:
         quote = {'quote': quote_db.quote,
                  'date': quote_db.date,
-                 'annotation': quote_db.annotation}
+                 'annotation': quote_db.annotation,
+                 'id': quote_db.id}
         return make__json_response({'status': 'success',
                                     'quote': quote})
     else:
         return make__json_response({'status': 'error',
                                     'description': 'Quote does not exist'})
+
+
+@app.route('/api/quote/<int:quote_id>/next')
+def get_next_quote(quote_id):
+    quote_db = Quote.query.order_by(Quote.id).filter(Quote.id > quote_id).filter_by(accepted=True).first()
+    if quote_db is not None:
+            quote = {'quote': quote_db.quote,
+                     'date': quote_db.date,
+                     'annotation': quote_db.annotation,
+                     'id': quote_db.id}
+            return make__json_response({'status': 'success',
+                                        'quote': quote})
+    else:
+        return make__json_response({'status': 'error',
+                                    'description': 'Quote does not exist'})
+
+
+@app.route('/api/quote/<int:quote_id>/prev')
+def get_prev_quote(quote_id):
+    quote_db = Quote.query.order_by(desc(Quote.id)).filter(Quote.id < quote_id).filter_by(accepted=True).first()
+    if quote_db is not None:
+        quote = {'quote': quote_db.quote,
+                 'date': quote_db.date,
+                 'annotation': quote_db.annotation,
+                 'id': quote_db.id}
+        return make__json_response({'status': 'success',
+                                    'quote': quote})
+    else:
+        return make__json_response({'status': 'error',
+                                    'description': 'Quote does not exist'})
+
 
 
 @app.route('/api/quotes')
