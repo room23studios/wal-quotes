@@ -7,9 +7,11 @@ from sqlalchemy.sql.expression import func, desc
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import json
+from flask_cors import CORS
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+CORS(app)
 db = SQLAlchemy(app)
 auth = HTTPBasicAuth()
 limiter = Limiter(app, key_func=get_remote_address)
