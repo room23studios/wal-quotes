@@ -87,7 +87,6 @@ def get_prev_quote(quote_id):
                                     'description': 'Quote does not exist'})
 
 
-
 @app.route('/api/quotes')
 def get_quotes():
     quotes = Quote.query.filter_by(accepted=True)
@@ -102,9 +101,9 @@ def get_quotes():
 @app.route('/api/submit', methods=['POST'])
 @limiter.limit("20 per hour")
 def submit():
-    if Quote.query.filter_by(quote=request.form['Quote']).first() is None:
-        quote = Quote(quote=request.form['Quote'], date=request.form.get('Date', ''),
-                      annotation=request.form.get('Annotation', ''))
+    if Quote.query.filter_by(quote=request.get_json(force=True)['quote']).first() is None:
+        quote = Quote(quote=request.get_json(force=True)['quote'], date=request.get_json(force=True).get('date', ''),
+                      annotation=request.get_json(force=True).get('annotation', ''))
         db.session.add(quote)
         db.session.commit()
         return make__json_response({'status': 'success',
@@ -168,9 +167,9 @@ def set_submissions(quote_id):
 @app.route('/api/new_admin', methods=['POST'])
 @auth.login_required
 def add_admin():
-    if Admin.query.filter_by(username=request.form['Username']).first() is None:
-        admin = Admin(username=request.form['Username'])
-        admin.hash_password(request.form['Username'])
+    if Admin.query.filter_by(username=request.get_json(force=True)['username']).first() is None:
+        admin = Admin(username=request.get_json(force=True)['username'])
+        admin.hash_password(request.get_json(force=True)['username'])
         db.session.add(admin)
         db.session.commit()
         return make__json_response({'status': 'success'})
@@ -182,7 +181,7 @@ def add_admin():
 @app.route('/api/change_password', methods=['POST'])
 @auth.login_required
 def change_password():
-    g.user.hash_password(request.form['Password'])
+    g.user.hash_password(request.get_json(force=True)['password'])
     db.session.add(g.user)
     db.session.commit()
     return make__json_response({'status': 'success'})
