@@ -1,5 +1,5 @@
-# wal-quotes
-Great quotes by an anonymous computer science teacher.
+# zsa-quotes-api
+Memorable quotes from ZSA teachers.
 
 ## Getting started
 The first thing one needs to do after cloning the repository is initializing the database and creating the admin account.
