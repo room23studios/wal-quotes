@@ -46,12 +46,18 @@ class Daily(db.Model):
 def get_quote(quote_id):
     quote_db = Quote.query.filter_by(id=quote_id).filter_by(accepted=True).first()
     if quote_db is not None:
-        quote = {'quote': quote_db.quote,
-                 'date': quote_db.date,
-                 'annotation': quote_db.annotation,
-                 'id': quote_db.id}
-        return make__json_response({'status': 'success',
-                                    'quote': quote})
+        response = {'status': 'success', 'quote': {'quote': quote_db.quote,
+                                                   'date': quote_db.date,
+                                                   'annotation': quote_db.annotation,
+                                                   'id': quote_db.id}}
+        quote_next = Quote.query.order_by(Quote.id).filter(Quote.id > quote_id).filter_by(accepted=True).first()
+        if quote_next is not None:
+            response['next'] = quote_next.id
+        quote_prev = Quote.query.order_by(desc(Quote.id)).filter(Quote.id < quote_id).filter_by(accepted=True).first()
+        if quote_prev is not None:
+            response['prev'] = quote_prev.id
+
+        return make__json_response(response)
     else:
         return make__json_response({'status': 'error',
                                     'description': 'Quote does not exist'})
