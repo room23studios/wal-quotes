@@ -99,8 +99,22 @@ class QuoteRandom(APIView):
         count = Quote.objects.all().count()
         quote = Quote.objects.all()[int(random.random() * count)]
         serializer = QuoteSerializer(quote)
+        prev_quote = Quote.objects.filter(id__lte=quote.id, accepted=True).exclude(id=quote.id).order_by(
+            '-id').first()
+        next_quote = Quote.objects.filter(id__gte=quote.id, accepted=True).exclude(id=quote.id).order_by(
+            'id').first()
+        if prev_quote is not None:
+            prev_id = prev_quote.id
+        else:
+            prev_id = None
+        if next_quote is not None:
+            next_id = next_quote.id
+        else:
+            next_id = None
         return Response({'status': 'Success',
-                         'quote': serializer.data})
+                         'quote': serializer.data,
+                         'next': next_id,
+                         'prev': prev_id})
 
 
 @method_decorator(csrf_exempt, name='dispatch')
