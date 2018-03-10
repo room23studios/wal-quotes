@@ -6,7 +6,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 
 urlpatterns = [
     url(r'^quotes/$', views.QuoteList.as_view()),
-    url(r'^quotes/(?P<id>[0-9]+)/$', views.QuoteDetails.as_view()),
+    url(r'^quotes/(?P<id>[0-9]+)/$', ensure_csrf_cookie(views.QuoteDetails.as_view())),
     url(r'^submit/$', ensure_csrf_cookie(views.QuoteSubmit.as_view())),
     url(r'^random/$', views.QuoteRandom.as_view()),
     url(r'^accept/(?P<id>[0-9]+)/$', ensure_csrf_cookie(views.QuoteAccept.as_view())),

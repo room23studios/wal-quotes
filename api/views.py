@@ -16,7 +16,8 @@ class QuoteList(APIView):
     def get(self, request, format=None):
         quotes = Quote.objects.filter(accepted=True)
         serializer = QuoteSerializer(quotes, many=True)
-        return Response(serializer.data)
+        return Response({'status': 'Success',
+                             'quote': serializer.data})
 
 @method_decorator(csrf_exempt, name='dispatch')
 class QuoteDetails(APIView):
