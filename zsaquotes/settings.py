@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 
 import os
 import datetime
+#from csrfExemptSessionAuthentication import CsrfExemptSessionAuthentication
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -104,6 +105,9 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASESS': (
+      'CsrfExemptSessionAuthentication'
+    ),
     'DEFAULT_THROTTLE_RATES': {
         'anon': '10/hour',
         'user': '10/hour'
