@@ -8,6 +8,8 @@ from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.permissions import IsAdminUser
 from rest_framework.throttling import UserRateThrottle
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
 
 class QuoteList(APIView):
@@ -16,7 +18,7 @@ class QuoteList(APIView):
         serializer = QuoteSerializer(quotes, many=True)
         return Response(serializer.data)
 
-
+@method_decorator(csrf_exempt, name='dispatch')
 class QuoteDetails(APIView):
     def get(self, request, id, format=None):
         user = None
@@ -69,10 +71,9 @@ class QuoteDetails(APIView):
                              'message': 'Authentication failed'})
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class QuoteSubmit(APIView):
     throttle_classes = (UserRateThrottle,)
-
-
 
     def post(self, request):
         serializer = QuoteSerializer(data=request.data)
@@ -102,6 +103,7 @@ class QuoteRandom(APIView):
                          'quote': serializer.data})
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class QuoteAccept(APIView):
     authentication_classes = (JSONWebTokenAuthentication,)
     permission_classes = (IsAdminUser,)
@@ -124,6 +126,7 @@ class QuoteSubmissions(APIView):
                          'quote': serializer.data})
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class DailyDetails(APIView):
 
     def get(self, request, format=None):
@@ -133,7 +136,6 @@ class DailyDetails(APIView):
             serializer = QuoteSerializer(Quote.objects.get(id=quote_id))
             return Response({'status': 'Success',
                              'quote': serializer.data})
-
         except Daily.DoesNotExist:
             return Response({'status': 'Error',
                              'message': 'Daily does not exists'})
