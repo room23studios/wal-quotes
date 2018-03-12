@@ -7,6 +7,7 @@ class Quote(models.Model):
     date = models.DateField(blank=True, null=True)
     annotation = models.TextField(blank=True, null=True)
     accepted = models.BooleanField(default=False)
+    token = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.text

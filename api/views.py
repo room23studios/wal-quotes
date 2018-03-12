@@ -1,5 +1,10 @@
 import random
 
+from django.contrib.auth.hashers import make_password, check_password
+from django.contrib.auth.models import User
+from django.core.mail import send_mail
+from django.db import IntegrityError
+from django.utils.crypto import get_random_string
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from api.models import Quote, Daily
@@ -17,7 +22,8 @@ class QuoteList(APIView):
         quotes = Quote.objects.filter(accepted=True)
         serializer = QuoteSerializer(quotes, many=True)
         return Response({'status': 'Success',
-                             'quote': serializer.data})
+                         'quote': serializer.data})
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class QuoteDetails(APIView):
@@ -88,7 +94,28 @@ class QuoteSubmit(APIView):
             if user is not None and user[0].is_superuser:
                 serializer.save(accepted=True)
             else:
-                serializer.save(accepted=False)
+                token = get_random_string(length=32)
+                quote = serializer.save(accepted=False, token=make_password(token))
+
+                print(request.data['text']
+                      + "\nTo accept: https://alo-quotes.tk/api/accept_with_token/"
+                      + str(quote.id) + "/" + token + "\n"
+                      + "To reject: https://alo-quotes.tk/api/reject_with_token/"
+                      + str(quote.id) + "/" + token)
+
+                emails_pre = list(User.objects.filter(is_staff=True).all().values_list('email'))
+                emails = [email[0] for email in emails_pre]
+                send_mail(
+                    'New quote submitted',
+                    request.data['text']
+                    + "\nTo accept: https://alo-quotes.tk/api/accept_with_token/"
+                    + str(quote.id) + "/" + token + "\n"
+                    + "To reject: https://alo-quotes.tk/api/reject_with_token/"
+                    + str(quote.id) + "/" + token,
+                    'submission-bot@alo-quotes.tk',
+                    emails,
+                    fail_silently=False, )
+
             return Response({'status': 'Success',
                              'quote': serializer.data})
         return Response({'status': 'Error',
@@ -128,6 +155,36 @@ class QuoteAccept(APIView):
         quote.accepted = True
         quote.save()
         return Response({'status': 'Success'})
+
+
+class QuoteAcceptToken(APIView):
+    def get(self, request, id, token, format=None):
+        try:
+            quote = Quote.objects.get(id=id)
+            if check_password(token, quote.token):
+                quote.accepted = True
+                quote.save()
+                return Response({'status': 'Success'})
+            else:
+                return Response({'status': 'Error',
+                                 'message': 'Token does not match'})
+        except Quote.DoesNotExist:
+            return Response({'status': 'Error',
+                             'message': 'Quote with this id does not exist'})
+
+class QuoteRejectToken(APIView):
+    def get(self, request, id, token, format=None):
+        try:
+            quote = Quote.objects.get(id=id)
+            if check_password(token, quote.token):
+                quote.delete()
+                return Response({'status': 'Success'})
+            else:
+                return Response({'status': 'Error',
+                                 'message': 'Token does not match'})
+        except Quote.DoesNotExist:
+            return Response({'status': 'Error',
+                             'message': 'Quote with this id does not exist'})
 
 
 class QuoteSubmissions(APIView):

@@ -14,6 +14,8 @@ urlpatterns = [
     url(r'^daily/$', ensure_csrf_cookie(views.DailyDetails.as_view())),
     url(r'^token_auth/$', ensure_csrf_cookie(obtain_jwt_token)),
     url(r'^token_refresh/', ensure_csrf_cookie(refresh_jwt_token)),
+    url(r'^accept_with_token/(?P<id>[0-9]+)/(?P<token>.*)/$', views.QuoteAcceptToken.as_view()),
+    url(r'^reject_with_token/(?P<id>[0-9]+)/(?P<token>.*)/$', views.QuoteRejectToken.as_view()),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
