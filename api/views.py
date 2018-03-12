@@ -97,8 +97,8 @@ class QuoteSubmit(APIView):
 
 class QuoteRandom(APIView):
     def get(self, request, format=None):
-        count = Quote.objects.all().count()
-        quote = Quote.objects.all()[int(random.random() * count)]
+        count = Quote.objects.filter(accepted=True).count()
+        quote = Quote.objects.filter(accepted=True)[int(random.random() * count)]
         serializer = QuoteSerializer(quote)
         prev_quote = Quote.objects.filter(id__lte=quote.id, accepted=True).exclude(id=quote.id).order_by(
             '-id').first()
