@@ -160,8 +160,14 @@ class DailyDetails(APIView):
             auth = JSONWebTokenAuthentication()
             user = auth.authenticate(request=request)
             if user is not None and user[0].is_superuser:
-                count = Quote.objects.all().count()
-                daily = Daily.objects.create(quote_id=Quote.objects.all()[int(random.random() * count)].id)
+                count = Quote.objects.filter(accepted=True).count()
+                quote_id = Quote.objects.filter(accepted=True)[int(random.random() * count)].id
+                try:
+                    while quote_id == Daily.objects.latest('date').quote_id:
+                        quote_id = Quote.objects.filter(accepted=True)[int(random.random() * count)].id
+                except Daily.DoesNotExist:
+                    pass
+                daily = Daily.objects.create(quote_id=quote_id)
                 daily.save()
                 return Response({'status': 'Success'})
             else:
