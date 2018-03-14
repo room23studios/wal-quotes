@@ -18,6 +18,9 @@ from django.utils.decorators import method_decorator
 
 
 class QuoteList(APIView):
+    """
+    Returns all accepted quotes.
+    """
     def get(self, request, format=None):
         quotes = Quote.objects.filter(accepted=True)
         serializer = QuoteSerializer(quotes, many=True)
@@ -27,6 +30,12 @@ class QuoteList(APIView):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class QuoteDetails(APIView):
+    """
+    get:
+    Returns quote with supplied id.
+    delete:
+    Deletes quote with supplied id. Requires admin token.
+    """
     def get(self, request, id, format=None):
         user = None
         try:
@@ -80,6 +89,12 @@ class QuoteDetails(APIView):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class QuoteSubmit(APIView):
+    """
+    post:
+    Submits supplied quote (date and annotation are optional) with accepted=False.
+    Sends email to all admins containing quote and links to accept or delete quote.
+    If additionally supplied with admin token, quote gets accepted automatically.
+    """
     throttle_classes = (UserRateThrottle,)
 
     def post(self, request):
@@ -123,6 +138,10 @@ class QuoteSubmit(APIView):
 
 
 class QuoteRandom(APIView):
+    """
+    get:
+    Returns a random quote.
+    """
     def get(self, request, format=None):
         count = Quote.objects.filter(accepted=True).count()
         quote = Quote.objects.filter(accepted=True)[int(random.random() * count)]
@@ -147,6 +166,10 @@ class QuoteRandom(APIView):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class QuoteAccept(APIView):
+    """
+    post:
+    Accepts a quote with supplied id. Requires admin token.
+    """
     authentication_classes = (JSONWebTokenAuthentication,)
     permission_classes = (IsAdminUser,)
 
@@ -158,6 +181,12 @@ class QuoteAccept(APIView):
 
 
 class QuoteAcceptToken(APIView):
+    """
+    get:
+    Accepts quote with supplied id.
+    Requires token assigned to that quote.
+    Used in email messaging.
+    """
     def get(self, request, id, token, format=None):
         try:
             quote = Quote.objects.get(id=id)
@@ -172,7 +201,14 @@ class QuoteAcceptToken(APIView):
             return Response({'status': 'Error',
                              'message': 'Quote with this id does not exist'})
 
+
 class QuoteRejectToken(APIView):
+    """
+    get:
+    Deletes quote with supplied id.
+    Requires token assigned to that quote.
+    Used in email messaging.
+    """
     def get(self, request, id, token, format=None):
         try:
             quote = Quote.objects.get(id=id)
@@ -188,6 +224,10 @@ class QuoteRejectToken(APIView):
 
 
 class QuoteSubmissions(APIView):
+    """
+    get:
+    Returns a list of not yet accepted quotes.
+    """
     authentication_classes = (JSONWebTokenAuthentication,)
     permission_classes = (IsAdminUser,)
 
@@ -200,6 +240,12 @@ class QuoteSubmissions(APIView):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class DailyDetails(APIView):
+    """
+    get:
+    Returns a daily quote.
+    post:
+    Selects a new daily quote.
+    """
 
     def get(self, request, format=None):
         try:

@@ -3,6 +3,7 @@ from api import views
 from rest_framework.urlpatterns import format_suffix_patterns
 from rest_framework_jwt.views import obtain_jwt_token, refresh_jwt_token
 from django.views.decorators.csrf import ensure_csrf_cookie
+from rest_framework_swagger.views import get_swagger_view
 
 urlpatterns = [
     url(r'^quotes/$', views.QuoteList.as_view()),
@@ -16,6 +17,7 @@ urlpatterns = [
     url(r'^token_refresh/', ensure_csrf_cookie(refresh_jwt_token)),
     url(r'^accept_with_token/(?P<id>[0-9]+)/(?P<token>.*)/$', views.QuoteAcceptToken.as_view()),
     url(r'^reject_with_token/(?P<id>[0-9]+)/(?P<token>.*)/$', views.QuoteRejectToken.as_view()),
+    url(r'^docs', get_swagger_view(title='Alo Quotes API'))
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
