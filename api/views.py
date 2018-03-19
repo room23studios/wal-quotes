@@ -21,10 +21,11 @@ class QuoteList(APIView):
     """
     Returns all accepted quotes.
     """
+
     def get(self, request, format=None):
         quotes = Quote.objects.filter(accepted=True)
         serializer = QuoteSerializer(quotes, many=True)
-        return Response({'status': 'Success',
+        return Response({'status': 'success',
                          'quote': serializer.data})
 
 
@@ -36,6 +37,7 @@ class QuoteDetails(APIView):
     delete:
     Deletes quote with supplied id. Requires admin token.
     """
+
     def get(self, request, id, format=None):
         user = None
         try:
@@ -67,7 +69,7 @@ class QuoteDetails(APIView):
             return Response({'status': 'Error',
                              'message': 'Quote does not exists'})
         serializer = QuoteSerializer(quote)
-        return Response({'status': 'Success',
+        return Response({'status': 'success',
                          'quote': serializer.data,
                          'next': next_id,
                          'prev': prev_id})
@@ -78,7 +80,7 @@ class QuoteDetails(APIView):
             user = auth.authenticate(request=request)
             if user is not None and user[0].is_superuser:
                 Quote.objects.get(id=id).delete()
-                return Response({'status': 'Success'})
+                return Response({'status': 'success'})
             else:
                 return Response({'status': 'Error',
                                  'message': 'Authentication failed'})
@@ -131,7 +133,7 @@ class QuoteSubmit(APIView):
                     emails,
                     fail_silently=False, )
 
-            return Response({'status': 'Success',
+            return Response({'status': 'success',
                              'quote': serializer.data})
         return Response({'status': 'Error',
                          'messages': serializer.errors})
@@ -142,6 +144,7 @@ class QuoteRandom(APIView):
     get:
     Returns a random quote.
     """
+
     def get(self, request, format=None):
         count = Quote.objects.filter(accepted=True).count()
         quote = Quote.objects.filter(accepted=True)[int(random.random() * count)]
@@ -158,7 +161,7 @@ class QuoteRandom(APIView):
             next_id = next_quote.id
         else:
             next_id = None
-        return Response({'status': 'Success',
+        return Response({'status': 'success',
                          'quote': serializer.data,
                          'next': next_id,
                          'prev': prev_id})
@@ -177,7 +180,7 @@ class QuoteAccept(APIView):
         quote = Quote.objects.get(id=id)
         quote.accepted = True
         quote.save()
-        return Response({'status': 'Success'})
+        return Response({'status': 'success'})
 
 
 class QuoteAcceptToken(APIView):
@@ -187,13 +190,14 @@ class QuoteAcceptToken(APIView):
     Requires token assigned to that quote.
     Used in email messaging.
     """
+
     def get(self, request, id, token, format=None):
         try:
             quote = Quote.objects.get(id=id)
             if check_password(token, quote.token):
                 quote.accepted = True
                 quote.save()
-                return Response({'status': 'Success'})
+                return Response({'status': 'success'})
             else:
                 return Response({'status': 'Error',
                                  'message': 'Token does not match'})
@@ -209,12 +213,13 @@ class QuoteRejectToken(APIView):
     Requires token assigned to that quote.
     Used in email messaging.
     """
+
     def get(self, request, id, token, format=None):
         try:
             quote = Quote.objects.get(id=id)
             if check_password(token, quote.token):
                 quote.delete()
-                return Response({'status': 'Success'})
+                return Response({'status': 'success'})
             else:
                 return Response({'status': 'Error',
                                  'message': 'Token does not match'})
@@ -234,7 +239,7 @@ class QuoteSubmissions(APIView):
     def get(self, request, format=None):
         quotes = Quote.objects.filter(accepted=False)
         serializer = QuoteSerializer(quotes, many=True)
-        return Response({'status': 'Success',
+        return Response({'status': 'success',
                          'quote': serializer.data})
 
 
@@ -252,7 +257,7 @@ class DailyDetails(APIView):
             quote_id = Daily.objects.latest('date').quote_id
             print(quote_id)
             serializer = QuoteSerializer(Quote.objects.get(id=quote_id))
-            return Response({'status': 'Success',
+            return Response({'status': 'success',
                              'quote': serializer.data})
         except Daily.DoesNotExist:
             return Response({'status': 'Error',
@@ -272,7 +277,7 @@ class DailyDetails(APIView):
                     pass
                 daily = Daily.objects.create(quote_id=quote_id)
                 daily.save()
-                return Response({'status': 'Success'})
+                return Response({'status': 'success'})
             else:
                 return Response({'status': 'Error',
                                  'message': 'Authentication failed'})
