@@ -21,7 +21,7 @@ psycopg2-binary==2.7.4
 Pygments==2.2.0
 PyJWT==1.6.0
 pytz==2018.3
-requests==2.18.4
+requests==2.20.0
 simplejson==3.13.2
 uritemplate==3.0.0
 urllib3==1.22
