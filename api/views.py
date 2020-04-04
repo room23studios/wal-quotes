@@ -122,16 +122,16 @@ class QuoteSubmit(APIView):
 
                 emails_pre = list(User.objects.filter(is_staff=True).all().values_list('email'))
                 emails = [email[0] for email in emails_pre]
-                send_mail(
-                    'New quote submitted',
-                    request.data['text']
-                    + "\nTo accept: https://alo-quotes.tk/api/accept_with_token/"
-                    + str(quote.id) + "/" + token + "\n"
-                    + "To reject: https://alo-quotes.tk/api/reject_with_token/"
-                    + str(quote.id) + "/" + token,
-                    'submission-bot@alo-quotes.tk',
-                    emails,
-                    fail_silently=False, )
+                # send_mail(
+                #     'New quote submitted',
+                #     request.data['text']
+                #     + "\nTo accept: https://alo-quotes.tk/api/accept_with_token/"
+                #     + str(quote.id) + "/" + token + "\n"
+                #     + "To reject: https://alo-quotes.tk/api/reject_with_token/"
+                #     + str(quote.id) + "/" + token,
+                #     'submission-bot@alo-quotes.tk',
+                #     emails,
+                #     fail_silently=False, )
 
             return Response({'status': 'success',
                              'quote': serializer.data})
